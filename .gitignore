@@ -11,3 +11,7 @@ __pycache__/
 
 # Временные файлы
 input_image.jpg
+
+# Старые файлы, не нужные боту
+main.zip
+model.tflite/

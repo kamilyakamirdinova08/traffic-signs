@@ -1,13 +1,13 @@
 # Traffic Sign Recognition Telegram Bot
 
-A Telegram bot that recognizes road signs from photos. Send it a picture of a sign, and it replies with the sign's name (in Russian) and the model's confidence.
+A Telegram bot that recognizes road signs from photos. Send it a picture of a sign, and it replies with the sign's name in the language you chose: English, Russian, Kyrgyz or Turkish.
 
-The classifier is a convolutional neural network (Keras) trained on the **GTSRB** dataset (German Traffic Sign Recognition Benchmark): 43 sign classes, 30×30 RGB input.
+The classifier is a neural network (PyTorch) trained on the **GTSRB** dataset (German Traffic Sign Recognition Benchmark): 43 sign classes, 50×50 RGB input.
 
 ## How it works
 
 ```
-photo from user → resize to 30×30, scale to 0..1 → CNN (model.h5) → class 0–42 → sign name + confidence
+/start → choose language → photo from user → resize to 50×50, normalize → model (gtsrb_model.pth) → class 0–42 → sign name in chosen language
 ```
 
 ## Run locally
@@ -32,10 +32,14 @@ python main.py
 
 | File | What it is |
 |---|---|
-| `main.py` | Bot: receives a photo, runs the model, replies with the sign name |
-| `model.h5` | Trained Keras CNN (GTSRB, 43 classes) |
+| `main.py` | Bot: language choice, receives a photo, runs the model, replies with the sign name |
+| `model.py` | `GTSRB_MODEL` network definition (PyTorch) |
+| `gtsrb_model.pth` | Trained PyTorch weights (GTSRB, 43 classes) |
+| `translations_*.json` | Bot messages and sign names: `en`, `ru`, `ky`, `tr` |
+| `Model.ipynb` | Training notebook |
+| `model.h5` | Earlier Keras version of the model |
 | `requirements.txt` | Dependencies |
 
 ## Stack
 
-Python · TensorFlow / Keras · NumPy · python-telegram-bot
+Python · PyTorch / torchvision · Pillow · python-telegram-bot

@@ -1,4 +1,4 @@
-tensorflow>=2.10
-numpy
+torch
+torchvision
 pillow
 python-telegram-bot==13.15

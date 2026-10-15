@@ -1,106 +1,106 @@
 import os
-from io import BytesIO
-
-import numpy as np
-from keras.models import load_model
-from keras.utils import load_img, img_to_array
-from telegram import Update
+import json #JSON форматтагы маалыматтар менен иштөө үчүн json модулун импорттоо
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton # Telegram модулдан керектүү класстарды жана функцияларды импорттоо
+# telegram.ext модулдан керектүү класстарды жана функцияларды импорттоо
 from telegram.ext import Updater, CommandHandler, MessageHandler, CallbackContext, Filters
+# telegram.ext модулдан керектүү класстарды жана функцияларды импорттоо
+from PIL import Image #Сүрөттөр менен иштөө үчүн  PIL китепканадан Image модулду импорттоо
+import torch #Нейрон тармактары менен иштөө үчүн torch китепкананы импорттоо
+import torchvision.transforms as transforms # Сүрөттү өзгөртүү үчүн touchvision.transforms модулун импорттоо
+from model import GTSRB_MODEL  #  model.py файлдын GTSRB_MODEL классты импортто
 
+# Путь к вашей модели PyTorch
+MODEL_PATH = 'gtsrb_model.pth'
 
-# Путь к модели Keras
-MODEL_PATH = 'model.h5'
+# Определяем input_dim и output_dim для модели GTSRB_MODEL
+INPUT_DIM = 3 * 50 * 50  # Входной размер изображения (3 канала RGB и размер 50x50)
+OUTPUT_DIM = 43  # Количество классов (в GTSRB датасете 43 класса)
 
-# Загрузка модели
-model = load_model(MODEL_PATH)
+# Загрузка модели GTSRB_MODEL
+model = GTSRB_MODEL(INPUT_DIM, OUTPUT_DIM)
+model.load_state_dict(torch.load(MODEL_PATH, map_location=torch.device('cpu')))
+model.eval()
 
-# Классы GTSRB (German Traffic Sign Recognition Benchmark), индекс -> название знака
-classes = {
-    0: 'Ограничение максимальной скорости (20 км/ч)',
-    1: 'Ограничение максимальной скорости (30 км/ч)',
-    2: 'Ограничение максимальной скорости (50 км/ч)',
-    3: 'Ограничение максимальной скорости (60 км/ч)',
-    4: 'Ограничение максимальной скорости (70 км/ч)',
-    5: 'Ограничение максимальной скорости (80 км/ч)',
-    6: 'Конец зоны ограничения максимальной скорости (80 км/ч)',
-    7: 'Ограничение максимальной скорости (100 км/ч)',
-    8: 'Ограничение максимальной скорости (120 км/ч)',
-    9: 'Обгон запрещён',
-    10: 'Обгон грузовым автомобилям запрещён',
-    11: 'Пересечение со второстепенной дорогой',
-    12: 'Главная дорога',
-    13: 'Уступи дорогу',
-    14: 'Движение без остановки запрещено',
-    15: 'Движение запрещено',
-    16: 'Движение грузовых автомобилей запрещено',
-    17: 'Въезд запрещён',
-    18: 'Прочие опасности',
-    19: 'Опасный поворот (левый)',
-    20: 'Опасный поворот (правый)',
-    21: 'Опасные повороты',
-    22: 'Неровная дорога',
-    23: 'Скользкая дорога',
-    24: 'Сужение дороги',
-    25: 'Дорожные работы',
-    26: 'Светофорное регулирование',
-    27: 'Пешеходный переход',
-    28: 'Дети',
-    29: 'Пересечение с велосипедной дорожкой',
-    30: 'Гололедица',
-    31: 'Дикие животные',
-    32: 'Конец зоны всех ограничений',
-    33: 'Движение направо',
-    34: 'Движение налево',
-    35: 'Движение прямо',
-    36: 'Движение прямо или направо',
-    37: 'Движение прямо или налево',
-    38: 'Объезд препятствия справа',
-    39: 'Объезд препятствия слева',
-    40: 'Круговое движение',
-    41: 'Конец зоны запрещения обгона',
-    42: 'Конец зоны запрещения обгона грузовым автомобилям',
-}
+# Трансформация изображения перед подачей в модель
+preprocess = transforms.Compose([
+    transforms.Resize(50),
+    transforms.CenterCrop(50),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+])
 
+# Список поддерживаемых языков
+LANGUAGES = {'English': 'en', 'Русский': 'ru', 'Кыргызча': 'ky', 'Türkçe': 'tr'}
 
-# Функция для обработки команды /start
 def start(update: Update, context: CallbackContext) -> None:
-    update.message.reply_text('Привет! Отправь мне фото дорожного знака, и я скажу, что это за знак.')
+    # Создаем клавиатуру с кнопками для выбора языка
+    keyboard = [[KeyboardButton(lang) for lang in LANGUAGES.keys()]]
 
+    # Отправляем клавиатуру пользователю
+    update.message.reply_text(
+        "Choose language / Выберите язык / Тилди тандаңыз / Dilinizi seçiniz: ",
+        reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
+    )
 
-# Функция для обработки входящего изображения
+def select_language(update: Update, context: CallbackContext) -> None:
+    selected_language = update.message.text
+
+    # Сохраняем выбранный язык в данных пользователя
+    context.user_data['language'] = LANGUAGES.get(selected_language)
+
+    # Определяем текст сообщения в зависимости от выбранного языка
+    if selected_language == 'Русский':
+        confirmation_message = f'Вы выбрали {selected_language}'
+    elif selected_language == 'English':
+        confirmation_message = f'You have selected {selected_language}'
+    elif selected_language == 'Кыргызча':
+        confirmation_message = f'Сиз кыргыз тилин тандадыңыз'
+    elif selected_language == 'Türkçe':
+        confirmation_message = f'Siz türk dilini seçtiniz.'
+    else:
+        confirmation_message = f'Language {selected_language} is not supported'
+
+    # Отправляем подтверждение выбора языка
+    update.message.reply_text(confirmation_message)
 def handle_image(update: Update, context: CallbackContext) -> None:
-    # Фото читается в память, без сохранения на диск: несколько пользователей не мешают друг другу
-    buffer = BytesIO()
-    update.message.photo[-1].get_file().download(out=buffer)
-    buffer.seek(0)
+    photo_file = update.message.photo[-1].get_file()
+    photo_file.download('input_image.jpg')
+    img = Image.open('input_image.jpg')
+    img = preprocess(img)
+    img = img.unsqueeze(0)
+    with torch.no_grad():
+        output = model(img)
+    predicted_class = torch.argmax(output).item()
+    predicted_class_name = get_class_name(predicted_class, context)
+    update.message.reply_text(f'{predicted_class_name}')
 
-    # Подготовка изображения так же, как при обучении: 30x30, значения 0..1
-    img = load_img(buffer, target_size=(30, 30))
-    x = np.expand_dims(img_to_array(img), axis=0) / 255.0
-
-    # Предсказание класса
-    predictions = model.predict(x, verbose=0)[0]
-    class_index = int(np.argmax(predictions))
-    confidence = float(predictions[class_index])
-
-    predicted_class = classes.get(class_index, 'Неизвестный класс')
-    update.message.reply_text(f'Знак: {predicted_class}\nУверенность: {confidence:.0%}')
-
-
-# Функция для обработки команды /help
 def help_command(update: Update, context: CallbackContext) -> None:
-    update.message.reply_text('Отправьте мне фото дорожного знака для распознавания.')
+    update.message.reply_text(get_message('help_message', context))
 
+def load_messages(language):
+    with open(f"translations_{language}.json", "r", encoding="utf-8") as file:
+        return json.load(file)
+
+def get_message(key, context):
+    language = context.user_data.get('language', 'en')  # По умолчанию используем английский
+    messages = load_messages(language)
+    return messages[key]
+
+def get_class_name(index, context):
+    language = context.user_data.get('language', 'en')  # По умолчанию используем английский
+    messages = load_messages(language)
+    class_names = messages['class']
+    return class_names.get(str(index), 'Unknown class')
 
 def main() -> None:
+    # Токен бота берём из переменной окружения BOT_TOKEN, а не храним в коде
     token = os.environ.get('BOT_TOKEN')
     if not token:
-        raise SystemExit('Укажите токен бота в переменной окружения BOT_TOKEN (см. README).')
+        raise RuntimeError('Задайте токен бота в переменной окружения BOT_TOKEN')
     updater = Updater(token)
-
     dp = updater.dispatcher
-
     dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, select_language))
     dp.add_handler(MessageHandler(Filters.photo & ~Filters.command, handle_image))
     dp.add_handler(CommandHandler("help", help_command))
 
@@ -108,6 +108,6 @@ def main() -> None:
 
     updater.idle()
 
-
 if __name__ == '__main__':
     main()
+
