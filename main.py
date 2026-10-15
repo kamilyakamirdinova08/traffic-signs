@@ -1,4 +1,5 @@
 import os
+from io import BytesIO
 import json #JSON форматтагы маалыматтар менен иштөө үчүн json модулун импорттоо
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton # Telegram модулдан керектүү класстарды жана функцияларды импорттоо
 # telegram.ext модулдан керектүү класстарды жана функцияларды импорттоо
@@ -21,12 +22,11 @@ model = GTSRB_MODEL(INPUT_DIM, OUTPUT_DIM)
 model.load_state_dict(torch.load(MODEL_PATH, map_location=torch.device('cpu')))
 model.eval()
 
-# Трансформация изображения перед подачей в модель
+# Трансформация изображения перед подачей в модель — так же, как при обучении в Model.ipynb:
+# сжатие до 50x50 и ToTensor (значения 0..1), без Normalize
 preprocess = transforms.Compose([
-    transforms.Resize(50),
-    transforms.CenterCrop(50),
+    transforms.Resize((50, 50)),
     transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
 
 # Список поддерживаемых языков
@@ -63,9 +63,11 @@ def select_language(update: Update, context: CallbackContext) -> None:
     # Отправляем подтверждение выбора языка
     update.message.reply_text(confirmation_message)
 def handle_image(update: Update, context: CallbackContext) -> None:
-    photo_file = update.message.photo[-1].get_file()
-    photo_file.download('input_image.jpg')
-    img = Image.open('input_image.jpg')
+    # Фото читается в память, без общего файла на диске: несколько пользователей не мешают друг другу
+    buffer = BytesIO()
+    update.message.photo[-1].get_file().download(out=buffer)
+    buffer.seek(0)
+    img = Image.open(buffer).convert('RGB')
     img = preprocess(img)
     img = img.unsqueeze(0)
     with torch.no_grad():

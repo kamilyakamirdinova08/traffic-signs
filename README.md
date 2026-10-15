@@ -4,10 +4,19 @@ A Telegram bot that recognizes road signs from photos. Send it a picture of a si
 
 The classifier is a neural network (PyTorch) trained on the **GTSRB** dataset (German Traffic Sign Recognition Benchmark): 43 sign classes, 50×50 RGB input.
 
+## Results
+
+| | Accuracy |
+|---|---|
+| Validation (20% of the training set) | 99.85% |
+| **Official GTSRB test set (12,630 images)** | **98.97%** |
+
+Model: 6 convolutional layers with batch normalization and 3 fully connected layers, trained for 20 epochs with Adam and a linear learning-rate decay (see `Model.ipynb`).
+
 ## How it works
 
 ```
-/start → choose language → photo from user → resize to 50×50, normalize → model (gtsrb_model.pth) → class 0–42 → sign name in chosen language
+/start → choose language → photo from user → resize to 50×50, scale to 0..1 → model (gtsrb_model.pth) → class 0–42 → sign name in chosen language
 ```
 
 ## Run locally
