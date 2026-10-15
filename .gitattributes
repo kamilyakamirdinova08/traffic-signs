@@ -1,0 +1,2 @@
+# Ноутбук с обучением не считаем основным языком репозитория — GitHub покажет Python и Java
+*.ipynb linguist-documentation=true
