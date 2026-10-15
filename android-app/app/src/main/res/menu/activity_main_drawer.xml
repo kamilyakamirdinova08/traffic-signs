@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item android:title="@string/mainn">
+            <menu>
+                <group>
+        <item
+            android:id="@+id/sign"
+            android:icon="@drawable/znakii"
+            android:title="@string/menu_signs" />
+
+
+        <item
+            android:id="@+id/pdd"
+            android:icon="@drawable/pdd"
+
+            android:title="@string/menu_pdd" />
+        <item
+            android:id="@+id/shtraf"
+            android:icon="@drawable/shtraf_white"
+
+            android:title="@string/menu_shtraf" />
+                    <item
+                        android:id="@+id/material"
+                        android:icon="@drawable/material"
+
+                        android:title="@string/material" />
+                    <item
+                        android:id="@+id/video"
+                        android:icon="@drawable/map"
+                        android:title="@string/menu_video" />
+                    <item
+                        android:id="@+id/camera"
+                        android:icon="@android:drawable/ic_menu_send"
+                        android:title="@string/menu_camera" />
+                </group></menu></item>
+
+
+    </group>
+
+    <item android:title="@string/other">
+        <menu>
+            <group>
+                <item
+                    android:id="@+id/about"
+                    android:icon="@drawable/about"
+                    android:title="@string/menu_about" />
+                <item
+                    android:id="@+id/share"
+                    android:icon="@drawable/baseline_share_24"
+
+                    android:title="@string/menu_share" />
+                <item
+                    android:id="@+id/settings"
+                    android:icon="@drawable/settings"
+
+                    android:title="@string/action_settings" />
+            </group>
+        </menu>
+    </item>
+
+</menu>
