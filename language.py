@@ -3,7 +3,7 @@
 # from googletrans import Translator
 #
 # # Токен вашего бота
-# TOKEN = "6867647010:AAHJ0rgES62Q4jbOJGrH7SxpL3Hztb_jvhU"
+# TOKEN = "YOUR_BOT_TOKEN"
 #
 # # Создаем экземпляр класса Translator
 # translator = Translator()
@@ -58,7 +58,7 @@
 # from googletrans import Translator
 #
 # # Токен вашего бота
-# TOKEN = "6867647010:AAHJ0rgES62Q4jbOJGrH7SxpL3Hztb_jvhU"
+# TOKEN = "YOUR_BOT_TOKEN"
 #
 # # Состояния для реализации диалога с пользователем
 # SET_LANGUAGE = 0
@@ -297,7 +297,7 @@
 #
 #
 # def main() -> None:
-#     updater = Updater("6867647010:AAHJ0rgES62Q4jbOJGrH7SxpL3Hztb_jvhU")
+#     updater = Updater("YOUR_BOT_TOKEN")
 #
 #     dp = updater.dispatcher
 #
@@ -422,7 +422,7 @@
 #
 #
 #     def main() -> None:
-#         updater = Updater("6867647010:AAHJ0rgES62Q4jbOJGrH7SxpL3Hztb_jvhU")
+#         updater = Updater("YOUR_BOT_TOKEN")
 #
 #         dp = updater.dispatcher
 #
@@ -550,7 +550,7 @@
 #     update.message.reply_text('Отправьте мне изображение для классификации.')
 #
 # def main() -> None:
-#     updater = Updater("6867647010:AAHJ0rgES62Q4jbOJGrH7SxpL3Hztb_jvhU")
+#     updater = Updater("YOUR_BOT_TOKEN")
 #
 #     dp = updater.dispatcher
 #
