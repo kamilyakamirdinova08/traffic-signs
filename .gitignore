@@ -1,0 +1,13 @@
+# Виртуальное окружение и настройки IDE
+myenv/
+venv/
+.venv/
+.idea/
+.vscode/
+__pycache__/
+
+# Секреты
+.env
+
+# Временные файлы
+input_image.jpg

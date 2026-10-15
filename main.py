@@ -1,146 +1,102 @@
-from keras.models import load_model
-from keras.preprocessing import image
+import os
+from io import BytesIO
+
 import numpy as np
+from keras.models import load_model
+from keras.utils import load_img, img_to_array
 from telegram import Update
-# from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
-# from telegram.ext import Updater, CommandHandler, MessageHandler, CallbackContext
-from telegram.ext import Updater, CommandHandler, MessageHandler, CallbackContext, filters
-from telegram.ext.filters import Filters
+from telegram.ext import Updater, CommandHandler, MessageHandler, CallbackContext, Filters
 
 
-# Путь к вашей модели Keras
+# Путь к модели Keras
 MODEL_PATH = 'model.h5'
 
 # Загрузка модели
 model = load_model(MODEL_PATH)
 
+# Классы GTSRB (German Traffic Sign Recognition Benchmark), индекс -> название знака
+classes = {
+    0: 'Ограничение максимальной скорости (20 км/ч)',
+    1: 'Ограничение максимальной скорости (30 км/ч)',
+    2: 'Ограничение максимальной скорости (50 км/ч)',
+    3: 'Ограничение максимальной скорости (60 км/ч)',
+    4: 'Ограничение максимальной скорости (70 км/ч)',
+    5: 'Ограничение максимальной скорости (80 км/ч)',
+    6: 'Конец зоны ограничения максимальной скорости (80 км/ч)',
+    7: 'Ограничение максимальной скорости (100 км/ч)',
+    8: 'Ограничение максимальной скорости (120 км/ч)',
+    9: 'Обгон запрещён',
+    10: 'Обгон грузовым автомобилям запрещён',
+    11: 'Пересечение со второстепенной дорогой',
+    12: 'Главная дорога',
+    13: 'Уступи дорогу',
+    14: 'Движение без остановки запрещено',
+    15: 'Движение запрещено',
+    16: 'Движение грузовых автомобилей запрещено',
+    17: 'Въезд запрещён',
+    18: 'Прочие опасности',
+    19: 'Опасный поворот (левый)',
+    20: 'Опасный поворот (правый)',
+    21: 'Опасные повороты',
+    22: 'Неровная дорога',
+    23: 'Скользкая дорога',
+    24: 'Сужение дороги',
+    25: 'Дорожные работы',
+    26: 'Светофорное регулирование',
+    27: 'Пешеходный переход',
+    28: 'Дети',
+    29: 'Пересечение с велосипедной дорожкой',
+    30: 'Гололедица',
+    31: 'Дикие животные',
+    32: 'Конец зоны всех ограничений',
+    33: 'Движение направо',
+    34: 'Движение налево',
+    35: 'Движение прямо',
+    36: 'Движение прямо или направо',
+    37: 'Движение прямо или налево',
+    38: 'Объезд препятствия справа',
+    39: 'Объезд препятствия слева',
+    40: 'Круговое движение',
+    41: 'Конец зоны запрещения обгона',
+    42: 'Конец зоны запрещения обгона грузовым автомобилям',
+}
+
 
 # Функция для обработки команды /start
 def start(update: Update, context: CallbackContext) -> None:
-    update.message.reply_text('Привет! Отправь мне изображение для классификации.')
+    update.message.reply_text('Привет! Отправь мне фото дорожного знака, и я скажу, что это за знак.')
 
 
 # Функция для обработки входящего изображения
 def handle_image(update: Update, context: CallbackContext) -> None:
-    # Сохранение изображения, полученного от пользователя
-    photo_file = update.message.photo[-1].get_file()
-    photo_file.download('input_image.jpg')
+    # Фото читается в память, без сохранения на диск: несколько пользователей не мешают друг другу
+    buffer = BytesIO()
+    update.message.photo[-1].get_file().download(out=buffer)
+    buffer.seek(0)
 
-    # Загрузка изображения и подготовка для классификации
-    img_path = 'input_image.jpg'
-    img = image.load_img(img_path, target_size=(30, 30))
-    x = image.img_to_array(img)
-    x = np.expand_dims(x, axis=0)
-    x /= 255.0  # Нормализация
+    # Подготовка изображения так же, как при обучении: 30x30, значения 0..1
+    img = load_img(buffer, target_size=(30, 30))
+    x = np.expand_dims(img_to_array(img), axis=0) / 255.0
 
     # Предсказание класса
-    predictions = model.predict(x)
-    class_index = np.argmax(predictions)
+    predictions = model.predict(x, verbose=0)[0]
+    class_index = int(np.argmax(predictions))
+    confidence = float(predictions[class_index])
 
-    # Определение класса по индексу
-    # classes = {
-    #     0: 'Speed limit (20km/h)',
-    #     1: 'Speed limit (30km/h)',
-    #     2: 'Speed limit (50km/h)',
-    #     3: 'Speed limit (60km/h)',
-    #     4: 'Speed limit (70km/h)',
-    #     5: 'Speed limit (80km/h)',
-    #     6: 'End of speed limit (80km/h)',
-    #     7: 'Speed limit (100km/h)',
-    #     8: 'Speed limit (120km/h)',
-    #     9: 'No passing',
-    #     10: 'No passing veh over 3.5 tons',
-    #     11: 'Right-of-way at intersection',
-    #     12: 'Priority road',
-    #     13: 'Yield',
-    #     14: 'Stop',
-    #     15: 'No vehicles',
-    #     16: 'Veh > 3.5 tons prohibited',
-    #     17: 'No entry',
-    #     18: 'General caution',
-    #     19: 'Dangerous curve left',
-    #     20: 'Dangerous curve right',
-    #     21: 'Double curve',
-    #     22: 'Bumpy road',
-    #     23: 'Slippery road',
-    #     24: 'Road narrows on the right',
-    #     25: 'Road work',
-    #     26: 'Traffic signals',
-    #     27: 'Pedestrians',
-    #     28: 'Children crossing',
-    #     29: 'Bicycles crossing',
-    #     30: 'Beware of ice/snow',
-    #     31: 'Wild animals crossing',
-    #     32: 'End speed + passing limits',
-    #     33: 'Turn right ahead',
-    #     34: 'Turn left ahead',
-    #     35: 'Ahead only',
-    #     36: 'Go straight or right',
-    #     37: 'Go straight or left',
-    #     38: 'Keep right',
-    #     39: 'Keep left',
-    #     40: 'Roundabout mandatory',
-    #     41: 'End of no passing',
-    #     42: 'End no passing veh > 3.5 tons'
-    # }
-    classes = {
-        0: 'Ограничение максимальной скорости (20km/h)',
-        1: 'Ограничение максимальной скорости (30km/h)',
-        2: 'Ограничение максимальной скорости (50km/h)',
-        3: 'Ограничение максимальной скорости (60km/h)',
-        4: 'Ограничение максимальной скорости (70km/h)',
-        5: 'Ограничение максимальной скорости (80km/h)',
-        6: 'Конец зоны ограничение максимальной скорости (80km/h)',
-        7: 'Ограничение максимальной скорости (100km/h)',
-        8: 'Ограничение максимальной скорости (120km/h)',
-        9: 'Обгон запрещен',
-        10: 'Обгон грузовым автомобилям запрещен',
-        11: 'Пересечение со второстепенной дорогой',
-        12: 'Круговое движение',
-        13: 'Уступи дорогу',
-        14: 'Движение без остановки запрещено',
-        15: 'Движение запрещено',
-        16: 'Движение грузовых автомобилей запрещено',
-        17: 'Движение направо',
-        18: 'Прочие опасности',
-        19: 'Опасный поворот (левый)',
-        20: 'Опасный поворот (правый)',
-        21: 'Опасные повороты',
-        22: 'Неровная дорога',
-        23: 'Скользкая дорога',
-        24: 'Сужение дороги',
-        25: 'Дорожные работы',
-        26: 'Светофорное регулирование',
-        27: 'Пешеходный переход',
-        28: 'Дети',
-        29: 'Пересечение с велосипедной дорожкой',
-        30: 'Гололедица',
-        31: 'Дикие животные',
-        32: 'Конец зоны всех ограничений',
-        33: 'Въезд запрещен',
-        34: 'Движение налево',
-        35: 'Движение прямо',
-        36: 'Движение прямо или направо',
-        37: 'Движение прямо или налево',
-        38: 'Объезд препятствия справа',
-        39: 'Объезд препятствия слева',
-        40: 'Главная дорога',
-        41: 'Конец зоны запрещения обгона',
-        42: 'Конец зоны запрещения обгона грузовым автомобилям'
-    }
     predicted_class = classes.get(class_index, 'Неизвестный класс')
-
-    # Вывод результата
-    update.message.reply_text(f'Класс изображения: {predicted_class}')
+    update.message.reply_text(f'Знак: {predicted_class}\nУверенность: {confidence:.0%}')
 
 
 # Функция для обработки команды /help
 def help_command(update: Update, context: CallbackContext) -> None:
-    update.message.reply_text('Отправьте мне изображение для классификации.')
+    update.message.reply_text('Отправьте мне фото дорожного знака для распознавания.')
 
 
 def main() -> None:
-    updater = Updater("") #enter your token for telegram bot
+    token = os.environ.get('BOT_TOKEN')
+    if not token:
+        raise SystemExit('Укажите токен бота в переменной окружения BOT_TOKEN (см. README).')
+    updater = Updater(token)
 
     dp = updater.dispatcher
 
