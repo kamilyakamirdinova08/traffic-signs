@@ -9,6 +9,23 @@ A helper for people learning road signs and traffic rules, made of two parts tha
 Android app ──(menu: Telegram bot)──► Telegram bot ──► PyTorch CNN (GTSRB, 43 classes) ──► sign name
 ```
 
+## Screenshots
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/app_menu.png" width="200"><br>App menu (Kyrgyz)</td>
+    <td align="center"><img src="docs/screenshots/app_signs.png" width="200"><br>Road-sign catalogue</td>
+    <td align="center"><img src="docs/screenshots/app_sign_detail.png" width="200"><br>Sign description</td>
+    <td align="center"><img src="docs/screenshots/bot_chat.png" width="200"><br>Bot: language choice and a recognized sign</td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/app_rules.png" width="200"><br>Traffic rules</td>
+    <td align="center"><img src="docs/screenshots/app_fine_detail.png" width="200"><br>Fines</td>
+    <td align="center"><img src="docs/screenshots/app_materials.png" width="200"><br>Study materials</td>
+    <td align="center"><img src="docs/screenshots/app_settings_language.png" width="200"><br>Language: Kyrgyz / Russian</td>
+  </tr>
+</table>
+
 ## Results
 
 | | Accuracy |

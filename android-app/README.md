@@ -4,6 +4,14 @@ An Android app for people learning road signs and traffic rules. The interface i
 
 Sign recognition from photos is handled by the Telegram bot in [`../bot`](../bot) (PyTorch CNN, 98.97% test accuracy on GTSRB). The app opens it from the side menu.
 
+<p>
+  <img src="../docs/screenshots/app_menu.png" width="180">
+  <img src="../docs/screenshots/app_signs.png" width="180">
+  <img src="../docs/screenshots/app_rule_detail.png" width="180">
+  <img src="../docs/screenshots/app_fines.png" width="180">
+  <img src="../docs/screenshots/app_about.png" width="180">
+</p>
+
 ## Features
 
 - **Signs:** a catalogue of road signs by category, with a picture and a description for each sign
